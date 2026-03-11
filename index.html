@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruePizza Mini App</title>
+    <!-- Подключаем Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .user-info {
+            background: #f0f2f5;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .user-info p {
+            margin: 5px 0;
+            color: #1a1a1a;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stat-card.green {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .stat-card.purple {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .main-button {
+            background: #2481cc;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 TruePizza Mini App</h1>
+        
+        <!-- Информация о пользователе -->
+        <div class="user-info" id="userInfo">
+            <p>Загрузка данных...</p>
+        </div>
+        
+        <!-- Форма отправки жалобы -->
+        <div class="form-group">
+            <label>👤 Username цели:</label>
+            <input type="text" id="username" placeholder="@durov">
+        </div>
+        
+        <div class="form-group">
+            <label>📋 Причина:</label>
+            <select id="reason">
+                <option value="1">💀 Докс / Слив данных</option>
+                <option value="2">🌩 Спам</option>
+                <option value="3">🌈 Мати / Оскорбления</option>
+                <option value="4">🔒 Виртуальный номер</option>
+                <option value="5">💎 Премиум для спама</option>
+                <option value="6">🛡 Взлом аккаунта</option>
+                <option value="7">💰 Мошенничество</option>
+                <option value="8">⛔ Детская порнография</option>
+                <option value="9">🎁 Свой текст</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>🆔 ID цели:</label>
+            <input type="number" id="targetId" placeholder="123456789">
+        </div>
+        
+        <div class="form-group">
+            <label>📊 Количество жалоб (1-100):</label>
+            <input type="number" id="repeats" min="1" max="100" value="10">
+        </div>
+        
+        <div class="form-group" id="customMessageGroup" style="display: none;">
+            <label>✏️ Свой текст жалобы:</label>
+            <textarea id="customMessage" placeholder="Введите текст жалобы..."></textarea>
+        </div>
+        
+        <button class="button" onclick="sendComplaint()">🚀 ОТПРАВИТЬ ЖАЛОБУ</button>
+        
+        <!-- Статистика -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="totalComplaints">0</div>
+                <div class="stat-label">Всего жалоб</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-value" id="successRate">0%</div>
+                <div class="stat-label">Успешность</div>
+            </div>
+            <div class="stat-card purple" style="grid-column: span 2;">
+                <div class="stat-value" id="lastTarget">-</div>
+                <div class="stat-label">Последняя цель</div>
+            </div>
+        </div>
+        
+        <!-- Кнопка отправки в чат -->
+        <button class="main-button" onclick="sendToBot()">📤 Отправить данные в бота</button>
+    </div>
+
+    <script>
+        // Инициализация Telegram Web App
+        const tg = window.Telegram.WebApp;
+        
+        // Показываем основную кнопку и расширяем приложение
+        tg.ready();
+        tg.expand();
+        
+        // Получаем данные пользователя из Telegram
+        const user = tg.initDataUnsafe?.user;
+        
+        // Отображаем информацию о пользователе
+        function updateUserInfo() {
+            const userInfo = document.getElementById('userInfo');
+            if (user) {
+                userInfo.innerHTML = `
+                    <p>👤 <strong>${user.first_name} ${user.last_name || ''}</strong></p>
+                    <p>🆔 ID: ${user.id}</p>
+                    <p>📱 Username: ${user.username || 'нет'}</p>
+                `;
+            } else {
+                userInfo.innerHTML = '<p>👤 Данные пользователя не доступны (тестовый режим)</p>';
+            }
+        }
+        
+        updateUserInfo();
+        
+        // Показываем поле для своего текста при выборе причины 9
+        document.getElementById('reason').addEventListener('change', function(e) {
+            const customGroup = document.getElementById('customMessageGroup');
+            if (e.target.value === '9') {
+                customGroup.style.display = 'block';
+            } else {
+                customGroup.style.display = 'none';
+            }
+        });
+        
+        // Функция отправки жалобы (имитация)
+        function sendComplaint() {
+            const username = document.getElementById('username').value;
+            const reason = document.getElementById('reason').value;
+            const targetId = document.getElementById('targetId').value;
+            const repeats = document.getElementById('repeats').value;
+            const customMessage = document.getElementById('customMessage').value;
+            
+            if (!username || !targetId) {
+                tg.showAlert('⚠️ Заполните все поля!');
+                return;
+            }
+            
+            // Показываем подтверждение
+            tg.showConfirm(`Отправить ${repeats} жалоб(ы) на ${username}?`, function(confirmed) {
+                if (confirmed) {
+                    tg.showPopup({
+                        title: '✅ Отправка начата',
+                        message: `Жалобы на ${username} отправляются...`,
+                        buttons: [{type: 'close'}]
+                    });
+                    
+                    // Здесь можно отправить данные в бота
+                    console.log({
+                        username,
+                        reason,
+                        targetId,
+                        repeats,
+                        customMessage
+                    });
+                }
+            });
+        }
+        
+        // Функция отправки данных в бота
+        function sendToBot() {
+            const data = {
+                username: document.getElementById('username').value,
+                reason: document.getElementById('reason').value,
+                targetId: document.getElementById('targetId').value,
+                repeats: document.getElementById('repeats').value,
+                customMessage: document.getElementById('customMessage').value,
+                userId: user?.id,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Отправляем данные в бота
+            tg.sendData(JSON.stringify(data));
+            
+            // Показываем уведомление
+            tg.showAlert('📤 Данные отправлены в бота!');
+            
+            // Закрываем приложение
+            setTimeout(() => {
+                tg.close();
+            }, 1500);
+        }
+        
+        // Обновляем статистику (пример)
+        function updateStats() {
+            // Здесь можно получать реальные данные из бота
+            document.getElementById('totalComplaints').textContent = '127';
+            document.getElementById('successRate').textContent = '73%';
+            document.getElementById('lastTarget').textContent = '@MotherCurse';
+        }
+        
+        updateStats();
+    </script>
+</body>
+</html>
